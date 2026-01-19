@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text transition-colors;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-lg p-4 shadow-sm;
+  }
+
+  .btn-primary {
+    @apply px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2 bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border hover:bg-gray-100 dark:hover:bg-gray-800 text-light-text dark:text-dark-text font-medium rounded-lg transition-colors;
+  }
+
+  .input {
+    @apply w-full px-3 py-2 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-light-text dark:text-dark-text;
+  }
+
+  .tab {
+    @apply px-4 py-2 font-medium rounded-t-lg transition-colors cursor-pointer;
+  }
+
+  .tab-active {
+    @apply bg-light-surface dark:bg-dark-surface text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400;
+  }
+
+  .tab-inactive {
+    @apply text-light-text-secondary dark:text-dark-text-secondary hover:text-light-text dark:hover:text-dark-text;
+  }
+}
