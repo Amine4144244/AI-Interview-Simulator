@@ -1,1 +1,0 @@
-IP Connection Error: getaddrinfo ENOTFOUND api.ipify.org 

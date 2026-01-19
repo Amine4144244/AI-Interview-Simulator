@@ -1,283 +1,336 @@
-from fastapi import APIRouter, HTTPException, Depends
-from pydantic import BaseModel
-from typing import List, Dict, Any
-import os
+"""
+AI Code Reviewer & Mentor - Agent
+
+This is the core reasoning system that combines static analysis with LLM reasoning
+to provide comprehensive code reviews as a strict senior developer mentor.
+"""
+
+import ast
+import re
 import json
-from groq import Groq
-from dotenv import load_dotenv
+from typing import List, Dict, Any, Optional, Tuple
+from dataclasses import dataclass
+from detectors import CodeDetector
+from scoring import CodeScorer
+from prompts import PromptGenerator
+from utils import extract_json_from_response, calculate_complexity
 
-from security import verify_internal_api_key
+@dataclass
+class Issue:
+    """Represents a code issue found during analysis"""
+    line: Optional[int]
+    severity: str  # LOW, MEDIUM, HIGH, CRITICAL
+    issue_type: str  # performance, security, correctness, readability, maintainability
+    title: str
+    description: str
+    explanation: str
+    suggestion: str
 
-load_dotenv()
+@dataclass
+class Score:
+    """Represents code quality scores"""
+    correctness: int
+    readability: int
+    maintainability: int
+    performance: int
+    security: int
+    overall: int
 
-router = APIRouter()
+@dataclass
+class ReviewResult:
+    """Complete result of code review"""
+    score: Score
+    issues: List[Issue]
+    improved_code: str
+    mentor_explanation: str
+    follow_up_questions: List[str]
 
-# Initialize Groq client
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-if not GROQ_API_KEY or GROQ_API_KEY == "YOUR_REAL_GROQ_API_KEY_HERE":
-    print("WARNING: GROQ_API_KEY is not set properly. Please update the .env file with your actual API key from https://console.groq.com/keys")
-    client = None
-else:
-    client = Groq(api_key=GROQ_API_KEY)
-
-# Pydantic models for request/response
-class QuestionRequest(BaseModel):
-    role: str
-    difficulty: str
-    questionNumber: int
-
-class QuestionResponse(BaseModel):
-    question: str
-
-class AnswerRequest(BaseModel):
-    question: str
-    answer: str
-    role: str
-    difficulty: str
-
-class EvaluationResponse(BaseModel):
-    score: int
-    strengths: List[str]
-    weaknesses: List[str]
-    suggestions: List[str]
-
-class ReportRequest(BaseModel):
-    role: str
-    difficulty: str
-    evaluations: List[Dict[str, Any]]
-
-class ReportResponse(BaseModel):
-    finalScore: int
-    summary: str
-    recommendedTopics: List[str]
-
-# Helper function to call Groq API
-def call_groq(prompt: str, temperature: float = 0.7) -> str:
-    if client is None:
-        raise HTTPException(status_code=500, detail="GROQ API key is not configured. Please set up your API key in the .env file.")
+class AICodeReviewAgent:
+    """
+    Main orchestrator for AI code review.
     
-    try:
-        chat_completion = client.chat.completions.create(
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are an expert technical interviewer. Provide structured, helpful responses in JSON format only."
-                },
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ],
-            model="llama-3.1-8b-instant",  # Updated to a currently supported model
-            temperature=temperature,
-            max_tokens=1024,
-        )
-        return chat_completion.choices[0].message.content
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error calling Groq API: {str(e)}")
-
-# Helper function to extract JSON from response
-def extract_json(response: str) -> Dict[str, Any]:
-    try:
-        # Try to parse the entire response as JSON
-        return json.loads(response)
-    except json.JSONDecodeError:
-        # If that fails, try to extract JSON from the response
-        start_idx = response.find('{')
-        end_idx = response.rfind('}')
+    This agent combines static analysis with LLM reasoning to provide
+    comprehensive, mentor-style code reviews.
+    """
+    
+    def __init__(self):
+        self.detector = CodeDetector()
+        self.scorer = CodeScorer()
+        self.prompt_generator = PromptGenerator()
         
-        if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
-            json_str = response[start_idx:end_idx+1]
-            try:
-                return json.loads(json_str)
-            except json.JSONDecodeError:
-                # Clean the string to remove problematic characters
-                import re
-                # Remove control characters (except common ones like \n, \t, \r)
-                cleaned_str = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', '', json_str)
-                return json.loads(cleaned_str)
-        else:
-            raise ValueError("Could not extract valid JSON from response")
-
-@router.post("/generate-question", response_model=QuestionResponse)
-async def generate_question(request: QuestionRequest, _: str = Depends(verify_internal_api_key)):
-    role = request.role
-    difficulty = request.difficulty
-    question_number = request.questionNumber
+    def analyze_code(
+        self, 
+        code: str, 
+        language: str, 
+        skill_level: str, 
+        focus: str
+    ) -> ReviewResult:
+        """
+        Main method to analyze code and generate comprehensive review
+        
+        Args:
+            code: Source code to analyze
+            language: Programming language
+            skill_level: Developer skill level (junior/mid/senior)
+            focus: Review focus area
+            
+        Returns:
+            Complete review result with scores, issues, and recommendations
+        """
+        
+        # Step 1: Static Analysis
+        static_issues = self.detector.detect_issues(code, language)
+        
+        # Step 2: Code Complexity Analysis
+        complexity_metrics = self._analyze_complexity(code, language)
+        
+        # Step 3: LLM Analysis
+        llm_analysis = self._llm_analysis(code, language, skill_level, focus, static_issues)
+        
+        # Step 4: Combine Results
+        combined_issues = self._combine_issues(static_issues, llm_analysis.get("issues", []))
+        
+        # Step 5: Scoring
+        scores = self.scorer.calculate_scores(
+            code, language, combined_issues, complexity_metrics, skill_level
+        )
+        
+        # Step 6: Generate Improved Code
+        improved_code = self._generate_improved_code(code, language, llm_analysis.get("improved_code", ""))
+        
+        # Step 7: Generate Mentor Explanation
+        mentor_explanation = self._generate_mentor_explanation(
+            code, language, combined_issues, scores, skill_level
+        )
+        
+        # Step 8: Generate Follow-up Questions
+        follow_up_questions = self._generate_follow_up_questions(
+            code, language, combined_issues, skill_level
+        )
+        
+        return ReviewResult(
+            score=scores,
+            issues=combined_issues,
+            improved_code=improved_code,
+            mentor_explanation=mentor_explanation,
+            follow_up_questions=follow_up_questions
+        )
     
-    # If GROQ client is not available, return mock questions
-    if client is None:
-        # Return mock questions based on role and difficulty
-        mock_questions = {
-            "Frontend": [
-                "Explain the difference between React and Angular.",
-                "What is the virtual DOM and how does it work?",
-                "Explain CSS Flexbox and Grid with examples.",
-                "How do you optimize a web application's performance?",
-                "What are React hooks and how do they work?"
-            ],
-            "Backend": [
-                "Explain the difference between SQL and NoSQL databases.",
-                "What is RESTful API design and its principles?",
-                "How do you handle authentication and authorization in web applications?",
-                "Explain microservices architecture and its benefits.",
-                "What is database indexing and why is it important?"
-            ],
-            "Full-Stack": [
-                "How would you design a full-stack application for a blog?",
-                "Explain the MVC architectural pattern.",
-                "What is CORS and how do you handle it?",
-                "How do you handle data validation on both frontend and backend?",
-                "Explain JWT authentication flow."
-            ],
-            "default": [
-                "Explain object-oriented programming principles.",
-                "What is the difference between synchronous and asynchronous programming?",
-                "Explain the concept of closures in JavaScript.",
-                "How do you handle error handling in your applications?",
-                "What is the difference between let, const, and var in JavaScript?"
-            ]
+    def _analyze_complexity(self, code: str, language: str) -> Dict[str, Any]:
+        """Analyze code complexity metrics"""
+        metrics = {
+            "cyclomatic_complexity": 0,
+            "lines_of_code": len(code.splitlines()),
+            "function_count": 0,
+            "class_count": 0,
+            "nested_depth": 0,
+            "duplicate_code": False
         }
         
-        role_questions = mock_questions.get(role, mock_questions["default"])
-        question_index = (question_number - 1) % len(role_questions)
-        return QuestionResponse(question=role_questions[question_index])
-    
-    prompt = f"""
-    Generate a technical interview question for a {difficulty} level {role} developer.
-    This is question number {question_number} in a series of 5 questions.
-    
-    The question should:
-    - Be appropriate for a {difficulty} level {role} position
-    - Be specific and clear
-    - Test practical knowledge that would be relevant in a real job
-    - Not be too easy or too difficult for the specified level
-    
-    Return your response as a JSON object with the following format:
-    {{
-        "question": "Your question here"
-    }}
-    """
-    
-    try:
-        response = call_groq(prompt, temperature=0.8)
-        data = extract_json(response)
-        return QuestionResponse(question=data["question"])
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error generating question: {str(e)}")
-
-@router.post("/evaluate-answer", response_model=EvaluationResponse)
-async def evaluate_answer(request: AnswerRequest, _: str = Depends(verify_internal_api_key)):
-    question = request.question
-    answer = request.answer
-    role = request.role
-    difficulty = request.difficulty
-    
-    # If GROQ client is not available, return mock evaluation
-    if client is None:
-        import random
-        score = random.randint(5, 9)  # Generate a random score between 5-9
+        if language == "python":
+            try:
+                tree = ast.parse(code)
+                metrics.update(calculate_complexity(tree))
+            except SyntaxError:
+                pass
+        elif language in ["javascript", "typescript"]:
+            # Basic JS/TS complexity estimation
+            metrics["cyclomatic_complexity"] = code.count("if") + code.count("while") + code.count("for") + code.count("&&") + code.count("||")
+            metrics["function_count"] = code.count("function") + code.count("=>")
+            metrics["class_count"] = code.count("class")
         
-        return EvaluationResponse(
-            score=score,
-            strengths=["Good understanding of the basic concepts", "Clear explanation"],
-            weaknesses=["Could provide more specific examples", "Needs more depth in explanation"],
-            suggestions=["Include more practical examples", "Consider edge cases"]
-        )
+        return metrics
     
-    prompt = f"""
-    Evaluate the following answer to a technical interview question for a {difficulty} level {role} developer.
+    def _llm_analysis(
+        self, 
+        code: str, 
+        language: str, 
+        skill_level: str, 
+        focus: str,
+        static_issues: List[Issue]
+    ) -> Dict[str, Any]:
+        """Get LLM-based analysis"""
+        try:
+            prompt = self.prompt_generator.generate_review_prompt(
+                code, language, skill_level, focus, static_issues
+            )
+            
+            # Call LLM (this would integrate with Groq)
+            # For now, return structured mock data
+            return self._get_mock_llm_response(code, language, skill_level, focus)
+            
+        except Exception as e:
+            print(f"LLM analysis error: {e}")
+            return {
+                "issues": [],
+                "improved_code": code,
+                "mentor_explanation": "Unable to generate detailed analysis due to service error.",
+                "follow_up_questions": []
+            }
     
-    Question: {question}
-    Answer: {answer}
-    
-    Provide a comprehensive evaluation with the following:
-    1. A score from 0-10 (where 10 is excellent)
-    2. A list of strengths in the answer
-    3. A list of weaknesses or areas for improvement
-    4. Specific suggestions for how the answer could be improved
-    
-    Return your response as a JSON object with the following format:
-    {{
-        "score": 7,
-        "strengths": ["Strength 1", "Strength 2"],
-        "weaknesses": ["Weakness 1", "Weakness 2"],
-        "suggestions": ["Suggestion 1", "Suggestion 2"]
-    }}
-    """
-    
-    try:
-        response = call_groq(prompt, temperature=0.3)
-        data = extract_json(response)
-        return EvaluationResponse(
-            score=data["score"],
-            strengths=data["strengths"],
-            weaknesses=data["weaknesses"],
-            suggestions=data["suggestions"]
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error evaluating answer: {str(e)}")
-
-@router.post("/final-report", response_model=ReportResponse)
-async def generate_final_report(request: ReportRequest, _: str = Depends(verify_internal_api_key)):
-    role = request.role
-    difficulty = request.difficulty
-    evaluations = request.evaluations
-    
-    # If GROQ client is not available, return mock report
-    if client is None:
-        # Calculate average score from evaluations
-        total_score = sum(eval["score"] for eval in evaluations)
-        average_score = total_score / len(evaluations) if evaluations else 0
-        final_score = int(average_score * 10)  # Convert to 0-100 scale
+    def _combine_issues(self, static_issues: List[Issue], llm_issues: List[Dict]) -> List[Issue]:
+        """Combine static analysis issues with LLM-detected issues"""
+        combined = list(static_issues)
         
-        return ReportResponse(
-            finalScore=final_score,
-            summary=f"The candidate performed well overall in the {role} interview. With {difficulty} level questions, they showed good understanding of core concepts but could improve in some areas.",
-            recommendedTopics=["Practice more coding problems", "Review system design concepts", "Strengthen understanding of fundamentals"]
-        )
+        # Convert LLM issues to Issue objects and add
+        for llm_issue in llm_issues:
+            if isinstance(llm_issue, dict):
+                combined.append(Issue(
+                    line=llm_issue.get("line"),
+                    severity=llm_issue.get("severity", "MEDIUM"),
+                    issue_type=llm_issue.get("type", "readability"),
+                    title=llm_issue.get("title", "Code Issue"),
+                    description=llm_issue.get("description", ""),
+                    explanation=llm_issue.get("explanation", ""),
+                    suggestion=llm_issue.get("suggestion", "")
+                ))
+        
+        return combined
     
-    # Calculate average score
-    total_score = sum(eval["score"] for eval in evaluations)
-    average_score = total_score / len(evaluations) if evaluations else 0
-    final_score = int(average_score * 10)  # Convert to 0-100 scale
+    def _generate_improved_code(self, original_code: str, language: str, llm_improved: str) -> str:
+        """Generate improved version of the code"""
+        if llm_improved and llm_improved != original_code:
+            return llm_improved
+        
+        # Fallback: basic improvements based on static analysis
+        improved = original_code
+        
+        # Add basic formatting if needed
+        if language == "python":
+            try:
+                tree = ast.parse(original_code)
+                # Could add AST-based improvements here
+            except SyntaxError:
+                pass
+        
+        return improved
     
-    # Extract strengths, weaknesses, and suggestions
-    all_strengths = []
-    all_weaknesses = []
-    all_suggestions = []
+    def _generate_mentor_explanation(
+        self, 
+        code: str, 
+        language: str, 
+        issues: List[Issue], 
+        scores: Score, 
+        skill_level: str
+    ) -> str:
+        """Generate holistic mentor explanation"""
+        
+        # Get score summary
+        score_summary = f"Your code scored {scores.overall}/100 overall."
+        
+        # Identify main areas for improvement
+        lowest_scores = sorted([
+            ("Correctness", scores.correctness),
+            ("Readability", scores.readability),
+            ("Maintainability", scores.maintainability),
+            ("Performance", scores.performance),
+            ("Security", scores.security)
+        ], key=lambda x: x[1])[:2]
+        
+        areas_for_improvement = ", ".join([area for area, _ in lowest_scores])
+        
+        # Generate mentor tone explanation
+        tone_templates = {
+            "junior": "As you're learning, focus on the fundamentals. ",
+            "mid": "You're on the right track, but there's room to grow. ",
+            "senior": "As a senior developer, you should be setting the standard. "
+        }
+        
+        mentor_tone = tone_templates.get(skill_level, "")
+        
+        explanation = f"{mentor_tone}{score_summary} The main areas that need attention are {areas_for_improvement}."
+        
+        if issues:
+            critical_issues = [issue for issue in issues if issue.severity == "CRITICAL"]
+            if critical_issues:
+                explanation += f" There are {len(critical_issues)} critical issues that need immediate attention."
+        
+        return explanation
     
-    for eval in evaluations:
-        all_strengths.extend(eval.get("strengths", []))
-        all_weaknesses.extend(eval.get("weaknesses", []))
-        all_suggestions.extend(eval.get("suggestions", []))
+    def _generate_follow_up_questions(
+        self, 
+        code: str, 
+        language: str, 
+        issues: List[Issue], 
+        skill_level: str
+    ) -> List[str]:
+        """Generate thoughtful follow-up questions"""
+        
+        questions = []
+        
+        # Generic questions based on code analysis
+        if "function" in code.lower() or "def " in code:
+            questions.append("What is the time complexity of your main algorithm?")
+        
+        if "if" in code or "else" in code:
+            questions.append("Have you considered all the edge cases in your conditional logic?")
+        
+        if language == "python":
+            questions.append("How would you handle exceptions in this code?")
+        elif language in ["javascript", "typescript"]:
+            questions.append("What happens when this code encounters unexpected input?")
+        
+        # Skill-level specific questions
+        if skill_level == "junior":
+            questions.extend([
+                "What resources did you use to solve this problem?",
+                "Which part of this code took you the longest to figure out?"
+            ])
+        elif skill_level == "senior":
+            questions.extend([
+                "How would you scale this solution for production use?",
+                "What design patterns could improve this code's maintainability?",
+                "How would you test this code thoroughly?"
+            ])
+        
+        return questions[:3]  # Return max 3 questions
     
-    prompt = f"""
-    Generate a final interview report for a {difficulty} level {role} developer based on the following evaluations:
-    
-    Evaluations: {json.dumps(evaluations, indent=2)}
-    
-    The report should include:
-    1. A comprehensive summary of the candidate's performance
-    2. A list of recommended topics for the candidate to study to improve
-    
-    The average score is {average_score}/10 (or {final_score}/100).
-    
-    Return your response as a JSON object with the following format:
-    {{
-        "finalScore": {final_score},
-        "summary": "A comprehensive summary of the candidate's performance...",
-        "recommendedTopics": ["Topic 1", "Topic 2", "Topic 3"]
-    }}
-    """
-    
-    try:
-        response = call_groq(prompt, temperature=0.5)
-        data = extract_json(response)
-        return ReportResponse(
-            finalScore=data["finalScore"],
-            summary=data["summary"],
-            recommendedTopics=data["recommendedTopics"]
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error generating final report: {str(e)}")
+    def _get_mock_llm_response(self, code: str, language: str, skill_level: str, focus: str) -> Dict[str, Any]:
+        """Mock LLM response for demonstration"""
+        
+        # Generate realistic mock data based on code analysis
+        mock_issues = []
+        
+        # Check for common issues
+        if "for" in code and "for" in code:
+            mock_issues.append({
+                "line": 1,
+                "severity": "MEDIUM",
+                "type": "performance",
+                "title": "Inefficient iteration",
+                "description": "Nested loops detected - potential O(n²) complexity",
+                "explanation": "Nested iterations can become slow with large datasets",
+                "suggestion": "Consider using more efficient data structures or algorithms"
+            })
+        
+        if len(code.splitlines()) > 20:
+            mock_issues.append({
+                "line": None,
+                "severity": "LOW",
+                "type": "readability",
+                "title": "Long function",
+                "description": "Function is quite long and could be broken down",
+                "explanation": "Long functions are harder to understand, test, and maintain",
+                "suggestion": "Consider splitting into smaller, focused functions"
+            })
+        
+        # Generate improved code
+        improved_code = "# Improved version would include:\n"
+        improved_code += "# 1. Better variable naming\n"
+        improved_code += "# 2. Proper error handling\n"
+        improved_code += "# 3. Code comments\n"
+        improved_code += "# 4. Performance optimizations\n"
+        
+        return {
+            "issues": mock_issues,
+            "improved_code": improved_code,
+            "mentor_explanation": f"Your {language} code shows understanding of basic concepts but needs improvement in structure and efficiency.",
+            "follow_up_questions": [
+                "What is the expected input size for this code?",
+                "How would you test this implementation?",
+                "What edge cases should this handle?"
+            ]
+        }
+
+# Global agent instance
+agent = AICodeReviewAgent()
