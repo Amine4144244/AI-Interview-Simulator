@@ -9,17 +9,27 @@ export default {
         extend: {
             colors: {
                 primary: {
-                    50: '#f0f4ff',
-                    100: '#d9e2ff',
-                    200: '#bcd0ff',
-                    300: '#8eb0ff',
-                    400: '#5e85ff',
-                    500: '#3350ff',
-                    600: '#2238ff',
-                    700: '#1c2be0',
-                    800: '#1722b5',
-                    900: '#111991',
+                    DEFAULT: '#3352ff',
+                    50: '#eef2ff',
+                    100: '#e0e7ff',
+                    200: '#c7d2fe',
+                    300: '#a5b4fc',
+                    400: '#818cf8',
+                    500: '#3352ff',
+                    600: '#253cdc',
+                    700: '#1d2ca3',
+                    800: '#1e2881',
+                    900: '#1e2468',
                 },
+                "accent-neon": "#00f2ff",
+                "background-light": "#f5f6f8",
+                "background-dark": "#07080f",
+                "surface": "#121421",
+                "glass-border": "rgba(255, 255, 255, 0.12)",
+                "glass-bg": "rgba(255, 255, 255, 0.03)",
+                "emerald-accent": "#10b981",
+                "amber-accent": "#f59e0b",
+                "rose-accent": "#f43f5e",
                 secondary: {
                     50: '#fdf2ff',
                     100: '#f8dfff',
@@ -33,10 +43,6 @@ export default {
                     900: '#470058',
                 },
                 accent: '#00f2fe',
-                surface: {
-                    light: '#ffffff',
-                    dark: '#0f172a',
-                }
             },
             fontFamily: {
                 sans: ['"Outfit"', 'sans-serif'],

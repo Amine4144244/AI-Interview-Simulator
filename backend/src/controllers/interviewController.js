@@ -3,7 +3,7 @@ const axios = require('axios');
 
 exports.createInterview = async (req, res, next) => {
     try {
-        const { role, difficulty } = req.body;
+        const { role, difficulty, totalQuestions } = req.body;
         const user = req.user.id;
 
         // Check for existing in-progress interview
@@ -16,6 +16,7 @@ exports.createInterview = async (req, res, next) => {
             user,
             role,
             difficulty,
+            totalQuestions: totalQuestions || 5,
             questions: [],
             answers: [],
             status: 'in_progress',

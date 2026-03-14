@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const rateLimit = require('express-rate-limit');
-// const cookieParser = require('cookie-parser');
+const cookieParser = require('cookie-parser');
 const authRoutes = require('./src/routes/auth');
 const interviewRoutes = require('./src/routes/interviews');
 const errorHandler = require('./src/middleware/errorHandler');
@@ -29,7 +29,7 @@ app.use(cors({
         : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000'],
 }));
 app.use(express.json());
-// app.use(cookieParser());
+app.use(cookieParser());
 
 // Routes
 app.use('/api/auth', authRoutes);

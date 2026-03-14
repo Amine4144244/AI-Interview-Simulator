@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import { Sparkles, AlertCircle, Mail, Lock, LogIn } from 'lucide-react';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -29,112 +30,98 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 py-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        <div className="bg-background-dark text-slate-100 min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
             {/* Background Decorations */}
-            <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-primary-500/10 rounded-full blur-[120px] pointer-events-none"></div>
-            <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-secondary-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_50%_0%,rgba(51,82,255,0.15)_0%,transparent_70%)] pointer-events-none"></div>
+            <div className="absolute -bottom-24 -left-24 size-96 bg-primary/10 rounded-full blur-[100px] pointer-events-none"></div>
 
             <motion.div
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
-                className="max-w-md w-full z-10"
+                transition={{ duration: 0.8 }}
+                className="w-full max-w-md z-10"
             >
-                <div className="glass-card rounded-[3rem] p-10 md:p-12 border-white/50 dark:border-slate-800/50 shadow-2xl">
+                <div className="glass p-8 md:p-12 rounded-xl border border-glass-border shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-50"></div>
+
                     <div className="text-center mb-10">
-                        <Link to="/" className="inline-block mb-8">
-                            <motion.div
-                                whileHover={{ scale: 1.1 }}
-                                className="w-16 h-16 bg-gradient-to-tr from-primary-600 to-secondary-500 rounded-2xl flex items-center justify-center mx-auto shadow-xl shadow-primary-500/20"
-                            >
-                                <span className="text-white font-bold text-3xl font-display">AI</span>
-                            </motion.div>
+                        <Link to="/" className="inline-flex items-center gap-2 mb-8 group">
+                            <div className="bg-primary p-2 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <Sparkles className="text-white text-2xl" />
+                            </div>
+                            <span className="font-display font-bold text-2xl tracking-tight">Echo</span>
                         </Link>
-                        <h2 className="text-4xl font-bold text-slate-900 dark:text-white font-display tracking-tight">
-                            Welcome Back
-                        </h2>
-                        <p className="mt-3 text-slate-500 dark:text-slate-400 font-medium">
-                            Enter your credentials to continue
-                        </p>
+
+                        <h1 className="font-display text-4xl font-bold mb-3 text-gradient">Welcome back</h1>
+                        <p className="text-slate-400 font-light">Access the simulation environment</p>
                     </div>
 
-                    <form className="space-y-6" onSubmit={handleSubmit}>
+                    <form onSubmit={handleSubmit} className="space-y-6">
                         {error && (
                             <motion.div
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-5 py-4 rounded-2xl text-sm font-bold"
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center gap-3"
                             >
+                                <AlertCircle className="text-base" />
                                 {error}
                             </motion.div>
                         )}
 
-                        <div className="space-y-5">
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 ml-1">
-                                    Email Address
-                                </label>
-                                <input
-                                    type="email"
-                                    required
-                                    className="w-full px-5 py-4 bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 text-slate-900 dark:text-white rounded-2xl outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
-                                    placeholder="name@company.com"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                />
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold uppercase tracking-widest text-slate-500 ml-1">Email Terminal</label>
+                                <div className="relative">
+                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xl" />
+                                    <input
+                                        type="email"
+                                        required
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        className="w-full bg-white/5 border border-glass-border focus:border-primary/50 text-white rounded-xl py-4 pl-12 pr-4 outline-none transition-all placeholder:text-slate-600"
+                                        placeholder="user@echo.ai"
+                                    />
+                                </div>
                             </div>
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 ml-1">
-                                    Password
-                                </label>
-                                <input
-                                    type="password"
-                                    required
-                                    className="w-full px-5 py-4 bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 text-slate-900 dark:text-white rounded-2xl outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
-                                    placeholder="••••••••"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                />
+
+                            <div className="space-y-2">
+                                <div className="flex justify-between items-center ml-1">
+                                    <label className="text-xs font-bold uppercase tracking-widest text-slate-500">Access Key</label>
+                                    <Link to="#" className="text-[10px] uppercase font-bold text-primary hover:text-accent-neon transition-colors">Lost key?</Link>
+                                </div>
+                                <div className="relative">
+                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xl" />
+                                    <input
+                                        type="password"
+                                        required
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        className="w-full bg-white/5 border border-glass-border focus:border-primary/50 text-white rounded-xl py-4 pl-12 pr-4 outline-none transition-all placeholder:text-slate-600"
+                                        placeholder="••••••••"
+                                    />
+                                </div>
                             </div>
                         </div>
 
-                        <div className="flex items-center justify-between px-1">
-                            <label className="flex items-center group cursor-pointer">
-                                <input type="checkbox" className="w-5 h-5 rounded-lg border-slate-300 text-primary-600 focus:ring-primary-500" />
-                                <span className="ml-3 text-sm font-bold text-slate-600 dark:text-slate-400 group-hover:text-primary-500 transition-colors">
-                                    Remember me
-                                </span>
-                            </label>
-                            <Link to="#" className="text-sm font-bold text-primary-600 hover:text-primary-500 transition-colors">
-                                Forgot password?
-                            </Link>
-                        </div>
-
-                        <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
+                        <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full py-5 bg-primary-600 text-white rounded-[1.5rem] font-bold shadow-xl shadow-primary-500/20 hover:bg-primary-500 disabled:opacity-70 disabled:cursor-not-allowed transition-all text-lg"
+                            className="w-full bg-gradient-to-r from-primary to-[#5c75ff] hover:opacity-90 disabled:opacity-50 text-white font-bold py-4 rounded-xl transition-all shadow-[0_10px_20px_rgba(51,82,255,0.3)] flex items-center justify-center gap-2 mt-8 group"
                         >
                             {isLoading ? (
-                                <span className="flex items-center justify-center">
-                                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    Signing in...
-                                </span>
-                            ) : 'Sign In'}
-                        </motion.button>
+                                <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                            ) : (
+                                <>
+                                    Establish Link
+                                    <LogIn className="text-xl group-hover:translate-x-1 transition-transform" />
+                                </>
+                            )}
+                        </button>
                     </form>
 
-                    <div className="mt-10 text-center">
-                        <p className="text-slate-600 dark:text-slate-400 font-bold">
-                            Don't have an account?{' '}
-                            <Link to="/register" className="text-primary-600 hover:text-primary-500 transition-colors">
-                                Create account
-                            </Link>
+                    <div className="mt-10 pt-8 border-t border-glass-border text-center">
+                        <p className="text-slate-400 text-sm">
+                            New recruit? <Link to="/register" className="text-primary font-bold hover:text-accent-neon transition-colors ml-1">Create Artifact</Link>
                         </p>
                     </div>
                 </div>

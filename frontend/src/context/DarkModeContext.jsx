@@ -12,8 +12,9 @@ export const useDarkMode = () => {
 
 export const DarkModeProvider = ({ children }) => {
     const [darkMode, setDarkMode] = useState(() => {
-        // Check for saved preference or default to light mode
-        return localStorage.getItem('darkMode') === 'true';
+        // The new Stitch design strictly requires dark mode (white text on dark backgrounds)
+        // Force true to prevent broken layouts from previous light-mode localStorage.
+        return true;
     });
 
     useEffect(() => {

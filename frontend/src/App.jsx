@@ -5,6 +5,8 @@ import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import Analytics from './pages/Analytics';
+import Sessions from './pages/Sessions';
 import InterviewSession from './pages/InterviewSession';
 import ResultPage from './pages/ResultPage';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -15,36 +17,38 @@ function App() {
   const { darkMode } = useDarkMode();
 
   return (
-    <div className={`min-h-screen ${darkMode ? 'dark bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
+    <div className={darkMode ? 'dark' : ''}>
       <BrowserRouter>
-        <Header />
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="container mx-auto px-4 pt-32 pb-8"
-        >
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/interview/:id" element={
-              <ProtectedRoute>
-                <InterviewSession />
-              </ProtectedRoute>
-            } />
-            <Route path="/result/:id" element={
-              <ProtectedRoute>
-                <ResultPage />
-              </ProtectedRoute>
-            } />
-          </Routes>
-        </motion.div>
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/analytics" element={
+            <ProtectedRoute>
+              <Analytics />
+            </ProtectedRoute>
+          } />
+          <Route path="/sessions" element={
+            <ProtectedRoute>
+              <Sessions />
+            </ProtectedRoute>
+          } />
+          <Route path="/interview/:id" element={
+            <ProtectedRoute>
+              <InterviewSession />
+            </ProtectedRoute>
+          } />
+          <Route path="/result/:id" element={
+            <ProtectedRoute>
+              <ResultPage />
+            </ProtectedRoute>
+          } />
+        </Routes>
       </BrowserRouter>
     </div>
   );

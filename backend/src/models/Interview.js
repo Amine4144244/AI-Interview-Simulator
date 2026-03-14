@@ -41,6 +41,10 @@ const InterviewSchema = new mongoose.Schema({
         required: true,
         default: 'Mid',
     },
+    totalQuestions: {
+        type: Number,
+        default: 5,
+    },
     questions: [QuestionSchema],
     answers: [AnswerSchema],
     finalScore: {
