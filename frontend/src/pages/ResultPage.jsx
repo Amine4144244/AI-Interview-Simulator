@@ -3,6 +3,8 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { marked } from 'marked';
 import { api } from '../services/api';
+import Sidebar from '../components/Sidebar';
+import { Bell, ArrowLeft, Terminal, CheckCircle2, TrendingUp, AlertTriangle, Zap, RotateCcw, Home, Trash2 } from 'lucide-react';
 
 const ResultPage = () => {
     const { id } = useParams();
@@ -35,19 +37,29 @@ const ResultPage = () => {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen flex justify-center items-center bg-slate-50 dark:bg-slate-950">
-                <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+            <div className="flex h-screen overflow-hidden bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100">
+                <Sidebar activePath="/sessions" />
+                <main className="flex-1 overflow-y-auto bg-background-light dark:bg-[#0a0c16] flex justify-center items-center pb-20">
+                    <div className="flex flex-col items-center gap-4">
+                        <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+                        <p className="text-slate-400 font-mono text-sm uppercase tracking-widest animate-pulse">Processing Telemetry...</p>
+                    </div>
+                </main>
             </div>
         );
     }
 
     if (error || !interview) {
         return (
-            <div className="container mx-auto px-4 py-20 text-center">
-                <div className="glass-card p-10 rounded-[3rem] max-w-lg mx-auto border-red-500/20">
-                    <h2 className="text-2xl font-bold text-red-500 mb-4">{error || 'Session Not Found'}</h2>
-                    <button onClick={() => navigate('/dashboard')} className="glass-button px-8 py-3 rounded-2xl font-bold">Back to Base</button>
-                </div>
+            <div className="flex h-screen overflow-hidden bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100">
+                <Sidebar activePath="/sessions" />
+                <main className="flex-1 overflow-y-auto bg-background-light dark:bg-[#0a0c16] flex justify-center items-center pb-20">
+                    <div className="glass p-10 rounded-xl max-w-lg w-full mx-4 border border-rose-500/20 text-center">
+                        <AlertTriangle className="w-12 h-12 text-rose-500 mx-auto mb-4" />
+                        <h2 className="text-xl font-display font-bold text-rose-500 mb-6">{error || 'Artifact Corrupted or Not Found'}</h2>
+                        <button onClick={() => navigate('/sessions')} className="bg-white/5 hover:bg-white/10 text-white border border-glass-border px-8 py-3 rounded-full font-bold transition-colors">Return to Library</button>
+                    </div>
+                </main>
             </div>
         );
     }
@@ -55,178 +67,215 @@ const ResultPage = () => {
     const report = interview.finalReport || {};
 
     return (
-        <div className="max-w-6xl mx-auto pb-24 px-4">
-            {/* Header Hero */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="glass-card rounded-[3rem] p-10 md:p-14 mb-10 relative overflow-hidden bg-slate-900 text-white"
-            >
-                <div className="absolute top-0 right-0 w-96 h-96 bg-primary-500/20 blur-[150px] pointer-events-none"></div>
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary-500/10 blur-[120px] pointer-events-none"></div>
+        <div className="flex h-screen overflow-hidden bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100">
+            <Sidebar activePath="/sessions" />
 
-                <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-10">
-                    <div className="text-center md:text-left">
-                        <span className="inline-block px-4 py-1.5 mb-6 text-[10px] font-black tracking-widest text-primary-400 uppercase bg-primary-400/10 rounded-full border border-primary-400/20">
-                            Post-Session Analysis
-                        </span>
-                        <h1 className="text-5xl md:text-7xl font-black font-display tracking-tight mb-4">
-                            Performance <br /><span className="text-primary-400">Artifact</span>
-                        </h1>
-                        <p className="text-xl text-slate-400 font-medium">{formatDate(interview.createdAt)} • {interview.role} ({interview.difficulty})</p>
+            <main className="flex-1 overflow-y-auto bg-background-light dark:bg-[#0a0c16] relative pb-20">
+                {/* Header Nav */}
+                <header className="sticky top-0 z-50 flex items-center justify-between px-6 md:px-8 py-4 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-glass-border">
+                    <div className="flex items-center gap-4">
+                        <button onClick={() => navigate('/sessions')} className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm font-bold">
+                            <ArrowLeft size={16} /> <span className="hidden md:inline">Back to Telemetry</span>
+                        </button>
                     </div>
+                    <div className="flex items-center gap-4">
+                        <h2 className="font-display font-bold text-lg md:text-xl tracking-tight hidden sm:block">ECHO AI // Diagnostic Report</h2>
+                        <button className="w-10 h-10 flex items-center justify-center rounded-full glass text-slate-400 hover:text-white transition-colors">
+                            <Bell size={20} />
+                        </button>
+                    </div>
+                </header>
 
-                    <div className="relative">
-                        <div className="w-48 h-48 md:w-56 md:h-56 rounded-full border-[10px] border-slate-800 flex items-center justify-center relative shadow-2xl">
-                            <svg className="absolute inset-0 w-full h-full -rotate-90">
-                                <circle
-                                    cx="50%" cy="50%" r="42%"
-                                    className="fill-none stroke-primary-500 stroke-[10px]"
-                                    strokeDasharray="264"
-                                    strokeDashoffset={264 - (264 * (interview.finalScore || 0)) / 100}
-                                    strokeLinecap="round"
-                                />
-                            </svg>
-                            <div className="text-center">
-                                <div className="text-5xl md:text-6xl font-black font-display">{interview.finalScore}%</div>
-                                <div className="text-[10px] font-black uppercase tracking-widest text-primary-400">Score</div>
+                <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-8">
+                    {/* Header Hero */}
+                    <section className="relative rounded-xl overflow-hidden h-64 flex flex-col justify-center px-8 md:px-12 border border-glass-border group glass">
+                        <div className="absolute inset-0 bg-gradient-to-r from-background-dark via-background-dark/60 to-transparent z-10"></div>
+                        <div className="absolute inset-0 bg-primary/5 bg-cover bg-center grayscale opacity-50 transition-transform duration-700"></div>
+                        
+                        <div className="relative z-20 flex flex-col md:flex-row justify-between items-center gap-10">
+                            <div className="text-center md:text-left space-y-4">
+                                <div className="flex items-center gap-3 justify-center md:justify-start">
+                                    <Terminal className="text-primary" size={20} />
+                                    <span className="font-mono text-xs font-bold tracking-widest text-primary uppercase">
+                                        Session #{id.substring(0, 8)}
+                                    </span>
+                                </div>
+                                <h1 className="text-3xl md:text-4xl font-black font-display tracking-tight text-white shadow-sm">
+                                    Performance Artifact
+                                </h1>
+                                <p className="text-slate-400 font-medium font-mono text-sm">
+                                    {formatDate(interview.createdAt)} • Path: <span className="text-white">{interview.role}</span> • Level: <span className="text-white">{interview.difficulty}</span>
+                                </p>
+                            </div>
+
+                            <div className="relative flex-shrink-0">
+                                <div className="w-32 h-32 md:w-40 md:h-40 relative flex items-center justify-center">
+                                    <svg className="absolute inset-0 w-full h-full -rotate-90 drop-shadow-[0_0_15px_rgba(51,82,255,0.4)]">
+                                        <circle
+                                            cx="50%" cy="50%" r="42%"
+                                            className="fill-none stroke-glass-border/50 stroke-[6px]"
+                                        />
+                                        <circle
+                                            cx="50%" cy="50%" r="42%"
+                                            className="fill-none stroke-primary stroke-[6px] transition-all duration-1000 ease-in-out"
+                                            strokeDasharray="264"
+                                            strokeDashoffset={264 - (264 * (interview.finalScore || 0)) / 100}
+                                            strokeLinecap="round"
+                                        />
+                                    </svg>
+                                    <div className="text-center">
+                                        <div className="text-3xl md:text-4xl font-bold font-mono text-white">{interview.finalScore}%</div>
+                                        <div className="text-[10px] font-bold uppercase tracking-widest text-primary">Score</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </motion.div>
+                    </section>
 
-            <div className="grid lg:grid-cols-3 gap-10">
+            <div className="grid lg:grid-cols-3 gap-6">
                 {/* Main Insights */}
-                <div className="lg:col-span-2 space-y-10">
-                    <section className="glass-card rounded-[2.5rem] p-10 md:p-12">
-                        <h2 className="text-2xl font-black font-display mb-8 text-slate-900 dark:text-white">Executive Summary</h2>
-                        <div className="prose prose-lg dark:prose-invert max-w-none leading-relaxed font-medium text-slate-600 dark:text-slate-400">
+                <div className="lg:col-span-2 space-y-6">
+                    <section className="glass rounded-xl p-8 border border-glass-border">
+                        <div className="flex items-center gap-3 mb-6">
+                            <Zap className="text-amber-400" size={24} />
+                            <h2 className="text-2xl font-bold font-display text-white">Executive Summary</h2>
+                        </div>
+                        <div className="prose prose-invert max-w-none text-slate-300 leading-relaxed text-sm md:text-base">
                             <div dangerouslySetInnerHTML={{ __html: marked(report.summary || 'Summary pending...') }} />
                         </div>
                     </section>
 
-                    <section className="glass-card rounded-[2.5rem] p-10 md:p-12 overflow-hidden relative">
+                    <section className="glass rounded-xl p-8 border border-glass-border relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-[50px] pointer-events-none"></div>
-                        <h3 className="text-2xl font-black font-display mb-10 text-slate-900 dark:text-white">Topic Mastery</h3>
-                        <div className="grid md:grid-cols-2 gap-6">
+                        <div className="flex items-center gap-3 mb-6">
+                            <TrendingUp className="text-emerald-400" size={24} />
+                            <h3 className="text-2xl font-bold font-display text-white">Topic Mastery</h3>
+                        </div>
+                        <div className="grid md:grid-cols-2 gap-4">
                             {(report.recommendedTopics || []).map((topic, i) => (
                                 <motion.div
                                     key={i}
-                                    whileHover={{ x: 10 }}
-                                    className="flex items-center gap-4 p-5 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800"
+                                    whileHover={{ x: 5 }}
+                                    className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-glass-border hover:border-emerald-400/30 transition-colors"
                                 >
-                                    <div className="w-10 h-10 rounded-xl bg-primary-500/10 text-primary-500 flex items-center justify-center shrink-0">
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                        </svg>
+                                    <div className="w-8 h-8 rounded-md bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
+                                        <CheckCircle2 size={16} />
                                     </div>
-                                    <span className="font-bold text-slate-700 dark:text-slate-200">{topic}</span>
+                                    <span className="font-medium text-slate-200 text-sm">{topic}</span>
                                 </motion.div>
                             ))}
                         </div>
                     </section>
 
                     {/* Breakdown */}
-                    <div className="space-y-8">
-                        <h2 className="text-3xl font-black font-display text-slate-900 dark:text-white mt-10">Neural Breakdown</h2>
+                    <div className="space-y-6">
+                        <h2 className="font-display text-xl font-bold pt-4 text-white">Neural Breakdown</h2>
                         {(interview.answers || []).map((res, i) => {
                             const q = interview.questions?.[i] || {};
                             const f = res.feedback || {};
+                            const scoreColor = f.score >= 8 ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10' : (f.score >= 5 ? 'text-primary border-primary/30 bg-primary/10' : 'text-amber-400 border-amber-500/30 bg-amber-500/10');
+                            
                             return (
-                                <motion.div
-                                    key={i}
-                                    initial={{ opacity: 0, y: 30 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true }}
-                                    className="glass-card rounded-[2.5rem] overflow-hidden"
-                                >
-                                    <div className="p-8 md:p-10 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                                        <h4 className="text-xl font-black text-slate-900 dark:text-white">Interaction 0{i + 1}</h4>
+                                <div key={i} className="glass rounded-xl overflow-hidden border border-glass-border">
+                                    <div className="px-6 py-4 bg-glass-bg/50 border-b border-glass-border flex justify-between items-center">
                                         <div className="flex items-center gap-3">
-                                            <span className="text-xs font-black uppercase tracking-widest text-slate-400">Score</span>
-                                            <div className="px-4 py-1.5 bg-primary-500 text-white rounded-full font-black text-sm">{f.score || 0}/10</div>
+                                            <span className="font-mono text-xs text-slate-400">0{i + 1}</span>
+                                            <h4 className="font-medium text-white">Interaction</h4>
+                                        </div>
+                                        <div className={`px-3 py-1 rounded-md border text-xs font-bold font-mono ${scoreColor}`}>
+                                            SYS.SCORE: {f.score || 0}/10
                                         </div>
                                     </div>
-                                    <div className="p-8 md:p-10 space-y-8">
+                                    <div className="p-6 md:p-8 space-y-6">
                                         <div>
-                                            <h5 className="text-[10px] font-black uppercase tracking-widest text-primary-500 mb-4">The Challenge</h5>
-                                            <div className="text-lg font-bold text-slate-800 dark:text-slate-100 leading-relaxed" dangerouslySetInnerHTML={{ __html: marked(q.questionText || '') }} />
+                                            <h5 className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">The Challenge</h5>
+                                            <div className="text-base text-slate-200 leading-relaxed" dangerouslySetInnerHTML={{ __html: marked(q.questionText || '') }} />
                                         </div>
-                                        <div className="p-6 bg-slate-50 dark:bg-slate-900/50 rounded-3xl border border-slate-100 dark:border-slate-800">
-                                            <h5 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Your Response</h5>
-                                            <p className="text-slate-600 dark:text-slate-400 font-medium leading-relaxed italic">"{res.answerText}"</p>
+                                        <div className="p-5 bg-black/20 rounded-lg border border-white/5">
+                                            <h5 className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">Your Output</h5>
+                                            <p className="text-slate-300 text-sm md:text-base leading-relaxed font-mono">"{res.answerText}"</p>
                                         </div>
-                                        <div className="grid md:grid-cols-2 gap-8 pt-4">
-                                            <div>
-                                                <h5 className="text-[10px] font-black uppercase tracking-widest text-emerald-500 mb-4">Strengths</h5>
-                                                <ul className="space-y-3">
+                                        <div className="grid md:grid-cols-2 gap-6 pt-2">
+                                            <div className="space-y-3">
+                                                <h5 className="text-[10px] font-bold uppercase tracking-widest text-emerald-500 flex items-center gap-2"><CheckCircle2 size={12}/> Validated Logic</h5>
+                                                <ul className="space-y-2">
                                                     {(f.strengths || []).map((s, idx) => (
-                                                        <li key={idx} className="flex gap-2 text-sm font-bold text-slate-600 dark:text-slate-400">
-                                                            <span className="text-emerald-500">✓</span> {s}
+                                                        <li key={idx} className="flex gap-2 text-sm text-slate-300 bg-emerald-500/5 p-2 rounded border border-emerald-500/10">
+                                                            <span className="text-emerald-500 shrink-0 mt-0.5">•</span> 
+                                                            <span className="leading-snug">{s}</span>
                                                         </li>
                                                     ))}
                                                 </ul>
                                             </div>
-                                            <div>
-                                                <h5 className="text-[10px] font-black uppercase tracking-widest text-amber-500 mb-4">Growth Plan</h5>
-                                                <ul className="space-y-3">
+                                            <div className="space-y-3">
+                                                <h5 className="text-[10px] font-bold uppercase tracking-widest text-amber-500 flex items-center gap-2"><AlertTriangle size={12}/> Optimization Required</h5>
+                                                <ul className="space-y-2">
                                                     {(f.suggestions || []).map((s, idx) => (
-                                                        <li key={idx} className="flex gap-2 text-sm font-bold text-slate-600 dark:text-slate-400">
-                                                            <span className="text-amber-500">→</span> {s}
+                                                        <li key={idx} className="flex gap-2 text-sm text-slate-300 bg-amber-500/5 p-2 rounded border border-amber-500/10">
+                                                            <span className="text-amber-500 shrink-0 mt-0.5">→</span> 
+                                                            <span className="leading-snug">{s}</span>
                                                         </li>
                                                     ))}
                                                 </ul>
                                             </div>
                                         </div>
                                     </div>
-                                </motion.div>
+                                </div>
                             )
                         })}
                     </div>
                 </div>
 
                 {/* Sidebar Navigation */}
-                <div className="space-y-8">
-                    <div className="sticky top-28 space-y-8">
-                        <div className="glass-card rounded-[2.5rem] p-10 text-center">
-                            <h3 className="text-xl font-black font-display mb-2 text-slate-900 dark:text-white">Evolution Ready?</h3>
-                            <p className="text-sm text-slate-500 font-bold mb-8 leading-relaxed">Submit this session to your global profile to update your ranking.</p>
-                            <div className="space-y-4">
+                <div className="space-y-6">
+                    <div className="sticky top-24 space-y-6">
+                        <div className="glass rounded-xl p-6 border border-glass-border">
+                            <h3 className="font-display text-lg font-bold mb-2 text-white">System Actions</h3>
+                            <p className="text-sm text-slate-400 mb-6 leading-relaxed">Manage this artifact or initiate a new simulation sequence.</p>
+                            
+                            <div className="space-y-3">
                                 <Link to="/interview/new" className="block">
-                                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full py-4 bg-primary-600 text-white rounded-2xl font-black shadow-lg shadow-primary-500/20">Recycle Process</motion.button>
+                                    <button className="w-full py-3 px-4 bg-primary text-white rounded-lg font-bold shadow-[0_0_15px_rgba(51,82,255,0.3)] hover:shadow-[0_0_20px_rgba(51,82,255,0.5)] transition-all flex items-center justify-center gap-2">
+                                        <RotateCcw size={18} /> Re-Initialize
+                                    </button>
                                 </Link>
-                                <button onClick={() => navigate('/dashboard')} className="w-full py-4 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white rounded-2xl font-black border border-slate-200 dark:border-slate-700">Command Center</button>
+                                <button onClick={() => navigate('/dashboard')} className="w-full py-3 px-4 bg-white/5 hover:bg-white/10 text-white rounded-lg font-bold border border-glass-border transition-colors flex items-center justify-center gap-2">
+                                    <Home size={18} /> Command Center
+                                </button>
 
                                 <button
                                     onClick={async () => {
-                                        if (window.confirm('Are you sure you want to delete this performance artifact?')) {
+                                        if (window.confirm('Are you sure you want to permanently delete this telemetry?')) {
                                             try {
                                                 await api.delete(`/interviews/${id}`);
-                                                navigate('/dashboard');
+                                                navigate('/sessions');
                                             } catch (err) {
                                                 console.error('Failed to delete interview:', err);
                                                 alert('Failed to delete session');
                                             }
                                         }
                                     }}
-                                    className="w-full py-4 bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 rounded-2xl font-black border border-red-200 dark:border-red-900/30 hover:bg-red-600 hover:text-white transition-all"
+                                    className="w-full py-3 px-4 mt-4 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white rounded-lg font-bold border border-rose-500/20 hover:border-transparent transition-all flex items-center justify-center gap-2"
                                 >
-                                    Purge Data
+                                    <Trash2 size={18} /> Purge Data
                                 </button>
                             </div>
                         </div>
 
-                        <div className="glass-card rounded-[2.5rem] p-10 overflow-hidden relative">
-                            <div className="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-transparent pointer-events-none"></div>
-                            <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-6">Expert Insight</h4>
-                            <p className="text-slate-700 dark:text-slate-300 font-bold leading-relaxed">
-                                "Your articulation on micro-interactions in the third question was state-of-the-art. Focus now on quantifying your engineering impact in the first section."
+                        <div className="glass rounded-xl p-6 border border-glass-border relative overflow-hidden group">
+                            <div className="absolute inset-0 bg-primary/5 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                            <h4 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3 flex items-center gap-2">
+                                <Zap size={14} /> Global Insight
+                            </h4>
+                            <p className="text-slate-300 text-sm leading-relaxed italic relative z-10">
+                                "Consistent precision in architectural answers. We recommend standardizing your system design responses using the STAR method for future sessions."
                             </p>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
+            </main>
         </div>
     );
 };

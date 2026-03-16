@@ -45,7 +45,7 @@ const Landing = () => {
                 </div>
             </nav>
 
-            <main className="relative pt-32">
+            <main className="relative">
                 {/* Hero Section */}
                 <section className="relative px-6 py-20 lg:py-32 hero-gradient">
                     <div className="max-w-5xl mx-auto text-center flex flex-col items-center">
@@ -118,19 +118,19 @@ const Landing = () => {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <FeatureCard
-                            icon="psychology"
+                            icon="memory"
                             title="AI Intelligence"
                             desc="Neural networks that adapt to your unique speaking style, vocabulary, and deep industry knowledge."
                             delay={0.1}
                         />
                         <FeatureCard
-                            icon="monitoring"
+                            icon="trending_up"
                             title="Real-time Evaluation"
                             desc="Instant feedback loops analyzing sentiment, pace, micro-expressions, and technical precision."
                             delay={0.2}
                         />
                         <FeatureCard
-                            icon="conversion_path"
+                            icon="target"
                             title="Custom Tracks"
                             desc="Tailored simulation paths for specialized roles, high-stakes board meetings, and venture pitches."
                             delay={0.3}
