@@ -100,14 +100,21 @@ const Dashboard = () => {
 
                     {/* Stats Grid */}
                     <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <StatCard title="Completed Sessions" value={completedInterviews.length} detail="High Activity" type="count" />
-                        <StatCard title="Avg Score" value={avgScore} detail="Performance" type="percent" color="emerald" />
-                        <StatCard title="Success Rate" value={avgScore > 0 ? Math.min(100, avgScore + 5) : 0} detail="Projected" type="percent" color="primary" />
-                        <StatCard title="Total Questions" value={completedInterviews.length * 5} detail="Answered" type="count" />
+                        <StatCard title="Completed Sessions" value={completedInterviews.length} detail="High Activity" type="count" index={0} />
+                        <StatCard title="Avg Score" value={avgScore} detail="Performance" type="percent" color="emerald" index={1} />
+                        <StatCard title="Success Rate" value={avgScore > 0 ? Math.min(100, avgScore + 5) : 0} detail="Projected" type="percent" color="primary" index={2} />
+                        <StatCard title="Total Questions" value={completedInterviews.length * 5} detail="Answered" type="count" index={3} />
                     </section>
 
                     {/* Path Selection */}
-                    <section id="evolution-path" className="space-y-6">
+                    <motion.section 
+                        id="evolution-path" 
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6 }}
+                        className="space-y-6"
+                    >
                         <h4 className="font-display text-xl font-bold">Select Evolution Path</h4>
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             <PathCard
@@ -115,6 +122,7 @@ const Dashboard = () => {
                                 icon="javascript"
                                 color="primary"
                                 desc="Master complex UI patterns, React internals, and performance optimization."
+                                index={0}
                             />
                             <PathCard
                                 role="Backend"
@@ -122,6 +130,7 @@ const Dashboard = () => {
                                 color="emerald-400"
                                 borderClass="border-emerald-400"
                                 desc="Focus on scalability, distributed systems, and API efficiency."
+                                index={1}
                             />
                             <PathCard
                                 role="Full-Stack"
@@ -129,9 +138,10 @@ const Dashboard = () => {
                                 color="amber-400"
                                 borderClass="border-amber-400"
                                 desc="The complete cycle: from database schemas to responsive design."
+                                index={2}
                             />
                         </div>
-                    </section>
+                    </motion.section>
 
                     {/* Artifacts Table */}
                     <section className="space-y-6">
@@ -210,17 +220,33 @@ const Dashboard = () => {
     );
 };
 
-const StatCard = ({ title, value, detail, type, color = "primary" }) => {
+const StatCard = ({ title, value, detail, type, color = "primary", index }) => {
     // Generate a stroke color class based on the prop
     let strokeClass = "stroke-primary";
     if (color === "emerald") strokeClass = "stroke-emerald-400";
     else if (color === "amber") strokeClass = "stroke-amber-400";
 
+    const percentage = type === 'percent' ? value : 100;
+
     return (
-        <div className="glass p-6 rounded-xl flex items-center justify-between group hover:border-primary/50 transition-colors h-full">
+        <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: index * 0.1 }}
+            className="glass p-6 rounded-xl flex items-center justify-between group hover:border-primary/50 transition-colors h-full"
+        >
             <div>
                 <p className="text-slate-400 text-sm font-medium">{title}</p>
-                <h3 className="font-display text-3xl font-bold mt-1">{value}{type === 'percent' ? '%' : ''}</h3>
+                <div className="flex items-baseline gap-1">
+                    <motion.h3 
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ duration: 0.6, delay: 0.2 + index * 0.1, type: "spring" }}
+                        className="font-display text-3xl font-bold mt-1"
+                    >
+                        {value}{type === 'percent' ? '%' : ''}
+                    </motion.h3>
+                </div>
                 <span className="text-primary text-xs flex items-center gap-1 mt-2">
                     <Zap size={14} /> {detail}
                 </span>
@@ -228,28 +254,35 @@ const StatCard = ({ title, value, detail, type, color = "primary" }) => {
             <div className="w-16 h-16 relative flex-shrink-0">
                 <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
                     <circle className="stroke-slate-800" cx="18" cy="18" fill="none" r="16" strokeWidth="3"></circle>
-                    <circle
+                    <motion.circle
+                        initial={{ strokeDasharray: "0, 100" }}
+                        animate={{ strokeDasharray: `${percentage}, 100` }}
+                        transition={{ duration: 1.5, delay: 0.3 + index * 0.1, ease: "easeOut" }}
                         className={`${strokeClass}`}
                         cx="18"
                         cy="18"
                         fill="none"
                         r="16"
-                        strokeDasharray={`${type === 'percent' ? value : 100}, 100`}
                         strokeLinecap="round"
                         strokeWidth="3"
-                    ></circle>
+                    ></motion.circle>
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                    <span className="text-[12px] font-bold leading-none">
+                    <motion.span 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 1 + index * 0.1 }}
+                        className="text-[12px] font-bold leading-none"
+                    >
                         {value}{type === 'percent' ? '%' : ''}
-                    </span>
+                    </motion.span>
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 };
 
-const PathCard = ({ role, icon, color, desc, borderClass = "border-primary" }) => {
+const PathCard = ({ role, icon, color, desc, borderClass = "border-primary", index }) => {
     const navigate = useNavigate();
 
     const startInterview = (difficulty) => {
@@ -274,7 +307,13 @@ const PathCard = ({ role, icon, color, desc, borderClass = "border-primary" }) =
     const hoverClass = hoverStyles[color] || hoverStyles['primary'];
 
     return (
-        <div className={`glass p-8 rounded-xl border-l-4 border-l-${color} group hover:bg-white/5 transition-all`}>
+        <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: index * 0.15 }}
+            className={`glass p-8 rounded-xl border-l-4 border-l-${color} group hover:bg-white/5 transition-all`}
+        >
             {getIcon()}
             <h5 className="font-display text-2xl font-bold mb-2">{role} {role !== 'Full-Stack' ? (role === 'Frontend' ? 'Architect' : 'Systems') : 'Lead'}</h5>
             <p className="text-slate-400 text-sm mb-6 h-10">{desc}</p>
@@ -286,7 +325,7 @@ const PathCard = ({ role, icon, color, desc, borderClass = "border-primary" }) =
                     <button onClick={() => startInterview('Senior')} className={`flex-1 py-1 px-2 rounded-lg border border-glass-border flex items-center justify-center ${hoverClass} transition-all text-[10px] font-bold uppercase`}>Senior</button>
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 };
 
