@@ -235,7 +235,9 @@ const InterviewSession = () => {
                             <XCircle className="text-rose-accent" size={28} />
                         </div>
                         <h2 className="text-2xl font-display font-bold text-white mb-3">System Interrupted</h2>
-                        <p className="text-slate-400 mb-8 leading-relaxed">{error}</p>
+                        <p className="text-slate-400 mb-8 leading-relaxed">
+                            {typeof error === 'object' ? (error.message || JSON.stringify(error)) : error}
+                        </p>
                         <Link to="/dashboard">
                             <button className="bg-primary hover:bg-primary/80 text-white px-8 py-3 rounded-xl font-display font-bold text-sm uppercase tracking-wider transition-all hover:shadow-lg hover:shadow-primary/20">
                                 Return to Dashboard

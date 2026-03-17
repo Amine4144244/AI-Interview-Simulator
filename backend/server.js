@@ -25,7 +25,7 @@ const limiter = rateLimit({
 app.use(limiter);
 app.use(cors({
     origin: process.env.NODE_ENV === 'production'
-        ? 'https://your-frontend-domain.com'
+        ? process.env.FRONTEND_URL || 'https://your-frontend-domain.com'
         : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000'],
 }));
 app.use(express.json());
@@ -51,17 +51,28 @@ app.get('/api/health', (req, res) => {
 // Error handling middleware
 app.use(errorHandler);
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI)
-    .then(() => {
+// Connect to MongoDB and start server
+const connectDB = async () => {
+    try {
+        await mongoose.connect(process.env.MONGODB_URI);
         console.log('Connected to MongoDB');
-        app.listen(PORT, () => {
-            console.log(`Server running on port ${PORT}`);
-        });
-    })
-    .catch((error) => {
+        
+        // Only start the server if we're not running in a serverless environment (like Vercel)
+        if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
+            app.listen(PORT, () => {
+                console.log(`Server running on port ${PORT}`);
+            });
+        }
+    } catch (error) {
         console.error('❌ MongoDB connection error: Could not connect to the database.');
         console.error(`Ensure MongoDB is running and that the MONGODB_URI environment variable is correct.`);
         console.error('Error details:', error.message);
-        process.exit(1);
-    });
+        if (!process.env.VERCEL) {
+            process.exit(1);
+        }
+    }
+};
+
+connectDB();
+
+module.exports = app;

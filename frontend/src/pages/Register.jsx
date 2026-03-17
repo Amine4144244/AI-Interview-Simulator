@@ -71,7 +71,7 @@ const Register = () => {
                                 className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center gap-3"
                             >
                                 <AlertCircle className="text-base" />
-                                {error}
+                                {typeof error === 'object' ? (error.message || JSON.stringify(error)) : error}
                             </motion.div>
                         )}
 

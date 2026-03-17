@@ -169,7 +169,12 @@ exports.proxyToAI = async (req, res, next) => {
 
         // Forward a sanitized error to the client
         const status = error.response ? error.response.status : 500;
-        const message = error.response ? error.response.data?.error || error.response.data : error.message || 'An unexpected error occurred with the AI service.';
+        let message = error.response ? error.response.data?.error || error.response.data : error.message || 'An unexpected error occurred with the AI service.';
+        
+        // Ensure message is a string for the frontend (fix React Error #31)
+        if (typeof message === 'object') {
+            message = message.message || JSON.stringify(message);
+        }
         
         res.status(status).json({ success: false, error: message });
     }

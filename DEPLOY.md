@@ -39,10 +39,32 @@ When prompted, choose the current directory as the project root — `vercel.json
 
 3. Add environment variables in the Vercel dashboard for any keys referenced by the frontend.
 
-## Notes
-- Do NOT commit real secrets. This repo's `.gitignore` already ignores `.env` files. Use `ai-agent/.env.example` as a template.
-- If you want, I can:
-  - Configure a Vercel `api` folder to migrate `backend` endpoints to serverless functions.
-  - Create a containerized deployment setup for `ai-agent` and provide a one-click deploy (Render/Railway).
+## Vercel Deployment (Recommended)
 
-If you want to proceed with full deployment (frontend + backend + agent) on Vercel, tell me which services you prefer for `backend` and `ai-agent` and I'll prepare the necessary changes (serverless migration or Docker files).
+This project is optimized for deployment on Vercel as three separate services. Follow these steps in order:
+
+### 1. AI Agent (`ai-agent`)
+- **Root Directory**: `ai-agent`
+- **Framework Preset**: `Other` (Vercel will detect `app.py` and `vercel.json`)
+- **Environment Variables**:
+  - `GROQ_API_KEY`: Your Groq API key.
+
+### 2. Backend (`backend`)
+- **Root Directory**: `backend`
+- **Framework Preset**: `Other` (Vercel will detect `server.js` and `vercel.json`)
+- **Environment Variables**:
+  - `MONGODB_URI`: Your MongoDB Atlas URI.
+  - `AI_AGENT_URL`: The URL of your deployed AI Agent.
+  - `INTERNAL_API_KEY`: A secret key for backend-to-agent talk.
+  - `JWT_SECRET`: Secret for user tokens.
+
+### 3. Frontend (`frontend`)
+- **Root Directory**: `frontend`
+- **Framework Preset**: `Vite`
+- **Environment Variables**:
+  - `VITE_API_URL`: The URL of your deployed Backend.
+
+---
+
+## Local Development
+Refer to the individual `README.md` files in each directory for local setup instructions.
