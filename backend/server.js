@@ -24,9 +24,25 @@ const limiter = rateLimit({
 // Middleware
 app.use(limiter);
 app.use(cors({
-    origin: process.env.NODE_ENV === 'production'
-        ? process.env.FRONTEND_URL || 'https://your-frontend-domain.com'
-        : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000'],
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        const allowedOrigins = [
+            process.env.FRONTEND_URL,
+            'http://localhost:5173', 
+            'http://localhost:5174', 
+            'http://localhost:3000'
+        ].filter(Boolean);
+
+        // Allow any .vercel.app subdomain or explicitly allowed origins
+        if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true
 }));
 app.use(express.json());
 app.use(cookieParser());
